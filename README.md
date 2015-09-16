@@ -1,7 +1,7 @@
 # LiquidCrystal for Python
 A Python port of Arduino's LiquidCrystal library that uses PyWiring to access an HD44780-based LCD display through any supported I/O port.
 
-Make sure [PyWiring](https://github.com/Davideddu/python-pywiring) is installed (setuptools installer coming soon for both PyWiring and LiquidCrystal - for now, just make sure it's in your PYTHONPATH).
+Make sure [PyWiring](https://github.com/Davideddu/python-pywiring) is installed.
 
 ## Usage
 First, get an instance of any PyWiring I/O port that has at least 6 digital outputs. For example, you can use `pywiring.i2c.PCF8574IO` for an I²C I/O port or *"LCD backpack"* based on the PCF8574 (like [this one](http://www.dx.com/p/216865?Utm_rid=14976370&Utm_source=affiliate)), or `pywiring.parport.ParallelIO` for a standard parallel port.
