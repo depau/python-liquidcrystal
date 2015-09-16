@@ -50,7 +50,7 @@ class LiquidCrystal(object):
         self._dpins = data
         self._bl = bl
         self._bl_sts_mask = 0
-        self._displaycontrol = LCD_DISPLAYON | LCD_CURSORON | LCD_BLINKON
+        self._displaycontrol = LCD_DISPLAYON
         self._displayfunction = LCD_4BITMODE
         self._displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT
 
@@ -117,7 +117,7 @@ class LiquidCrystal(object):
         self.clear()
         self.send(LCD_ENTRYMODESET | self._displaymode, COMMAND)
 
-        self.backlight = True
+        self.backlight = 255
 
     @property
     def backlight(self):
@@ -347,16 +347,13 @@ class LiquidCrystal(object):
             self.write_bits(value & 0x0F, 4, mode)
         self._sleep(EXEC_TIME*us)
 
-    def pulse_enable(self, tow=None):
+    def pulse_enable(self, tow={}):
         """
         Sends a pulse of 1 us to the Enable pin to execute a command
         or write operation.
         """
-        if tow:
-            tow[self._en] = True
-            self._ioi.digital_write_bulk(tow)
-        else:
-            self._ioi.digital_write(self._en, True)
+        tow[self._en] = True
+        self._ioi.digital_write_bulk(tow)
         self._sleep(us)
         self._ioi.digital_write(self._en, False)
 
