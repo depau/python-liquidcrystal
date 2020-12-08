@@ -4,17 +4,21 @@ LiquidCrystal LCD library based on PyWiring.
 
 __all__ = ("LiquidCrystal",)
 
-from .values import *
-from numpy import uint8
 import time
 
-ms = 1./1000
-us = 1./1000000
-ps = 1./1000000000
+from numpy import uint8
+
+from .values import *
+
+ms = 1. / 1000
+us = 1. / 1000000
+ps = 1. / 1000000000
+
 
 def num2boolgen(num):
     for bit in reversed(bin(num)[2:]):
         yield bit == "1"
+
 
 class LiquidCrystal(object):
     """
@@ -40,7 +44,7 @@ class LiquidCrystal(object):
     ====== ======
     """
 
-    def __init__(self, ioi, en=2, rw=1, rs=0, data=[4, 5, 6, 7], bl=3, cols=16, rows=2, charsize=LCD_5x8DOTS):
+    def __init__(self, ioi, en=2, rw=1, rs=0, data=(4, 5, 6, 7), bl=3, cols=16, rows=2, charsize=LCD_5x8DOTS):
         if len(data) not in (4, 8):
             raise ValueError("data pins can only be 4 or 8")
         self._ioi = ioi
@@ -62,7 +66,7 @@ class LiquidCrystal(object):
         # For some 1 line displays you can select a 10 pixel high font
         if charsize != LCD_5x8DOTS and rows == 1:
             self._displayfunction |= LCD_5x10DOTS
-   
+
         # Values for properties
         self._display = False
         self._backlight = 0
@@ -82,9 +86,7 @@ class LiquidCrystal(object):
             self._ioi.pin_mode(self._bl, False)
         self._ioi.pin_mode(self._en, False)
 
-        tow = {} # Avoid multiple digital_writes
-        tow[self._rs] = False
-        tow[self._en] = False
+        tow = {self._rs: False, self._en: False}  # Avoid multiple digital_writes
         if self._rw is not None:
             tow[self._rw] = False
         if self._bl is not None:
@@ -97,20 +99,20 @@ class LiquidCrystal(object):
         # according to datasheet, we need at least 40ms after power rises above 2.7V
         # before sending commands. Arduino can turn on way before 4.5V so we'll wait 
         # 50
-        self._sleep(100*ms)
+        self._sleep(100 * ms)
 
         # Put LCD into 4-bit mode
         self.send(0b11)
-        self._sleep(4.5*ms) # wait more than 4.1ms
+        self._sleep(4.5 * ms)  # wait more than 4.1ms
 
         self.send(0b11)
-        self._sleep(150*us)
+        self._sleep(150 * us)
 
         self.send(0b11)
 
         self._sleep(ms)
         self.send(0b10)
-      
+
         self.send(LCD_FUNCTIONSET | self._displayfunction, COMMAND)
         self.send(LCD_DISPLAYCONTROL | self._displaycontrol, COMMAND)
         self._display = True
@@ -128,6 +130,7 @@ class LiquidCrystal(object):
         (True-False)
         """
         return self._backlight
+
     @backlight.setter
     def backlight(self, value):
         if self._bl is None:
@@ -141,6 +144,7 @@ class LiquidCrystal(object):
         Show or hide content from the display.
         """
         return self._display
+
     @display.setter
     def display(self, value):
         if value:
@@ -149,13 +153,14 @@ class LiquidCrystal(object):
             self._displaycontrol &= ~uint8(LCD_DISPLAYON)
         self.send(LCD_DISPLAYCONTROL | self._displaycontrol, COMMAND)
         self._display = value
-    
+
     @property
     def cursor(self):
         """
         Show or hide the cursor (usually an underscore).
         """
         return self._cursor
+
     @cursor.setter
     def cursor(self, value):
         if value:
@@ -164,13 +169,14 @@ class LiquidCrystal(object):
             self._displaycontrol &= ~uint8(LCD_CURSORON)
         self.send(LCD_DISPLAYCONTROL | self._displaycontrol, COMMAND)
         self._cursor = value
-    
+
     @property
     def blink(self):
         """
         Enable or disable cursor blinking (usually a blinking block)
         """
         return self._blink
+
     @blink.setter
     def blink(self, value):
         if value:
@@ -199,6 +205,7 @@ class LiquidCrystal(object):
         Write new characters from left to right.
         """
         return self._ltr
+
     @ltr.setter
     def ltr(self, value):
         if value:
@@ -214,6 +221,7 @@ class LiquidCrystal(object):
         Write new characters from right to left.
         """
         return not self._ltr
+
     @rtl.setter
     def rtl(self, value):
         self.ltr = not value
@@ -236,6 +244,7 @@ class LiquidCrystal(object):
         This will 'right justify' text from the cursor, if True.
         """
         return self._autoscroll
+
     @autoscroll.setter
     def autoscroll(self, value):
         if value:
@@ -268,14 +277,14 @@ class LiquidCrystal(object):
         A character generator can be found at
         http://mikeyancey.com/hamcalc/lcd_characters.php
         """
-        location &= 0x7 # we only have 8 locations 0-7
-   
+        location &= 0x7  # we only have 8 locations 0-7
+
         self.send(LCD_SETCGRAMADDR | (location << 3), COMMAND)
-        self._sleep(30*us)
-   
+        self._sleep(30 * us)
+
         for i in char[0:8]:
             self.send(i, DATA)
-            self._sleep(40*us)
+            self._sleep(40 * us)
 
     def write(self, value):
         """
@@ -297,7 +306,7 @@ class LiquidCrystal(object):
         Clear the display and move the cursor home (:py:meth:`~LiquidCrystal.home`).
         """
         self.send(LCD_CLEARDISPLAY, COMMAND)
-        self._sleep(HOME_CLEAR_EXEC*us)
+        self._sleep(HOME_CLEAR_EXEC * us)
 
     def home(self):
         """
@@ -305,7 +314,7 @@ class LiquidCrystal(object):
         scrolls.
         """
         self.send(LCD_RETURNHOME, COMMAND)
-        self._sleep(HOME_CLEAR_EXEC*us)
+        self._sleep(HOME_CLEAR_EXEC * us)
 
     def set_cursor(self, row, col):
         """
@@ -313,7 +322,7 @@ class LiquidCrystal(object):
         """
         row_offsets_def = [0x00, 0x40, 0x14, 0x54]
         row_offsets_large = [0x00, 0x40, 0x10, 0x50]
-        
+
         if row >= self._rows:
             row = self._rows - 1
 
@@ -345,13 +354,16 @@ class LiquidCrystal(object):
         else:
             self.write_bits(value >> 4, 4, mode)
             self.write_bits(value & 0x0F, 4, mode)
-        self._sleep(EXEC_TIME*us)
+        self._sleep(EXEC_TIME * us)
 
-    def pulse_enable(self, tow={}):
+    def pulse_enable(self, tow=None):
         """
         Sends a pulse of 1 us to the Enable pin to execute a command
         or write operation.
         """
+        if tow is None:
+            tow = {}
+
         tow[self._en] = True
         self._ioi.digital_write_bulk(tow)
         self._sleep(us)
@@ -370,7 +382,7 @@ class LiquidCrystal(object):
 
         bits = [i for i in num2boolgen(value)][:nbits]
         if len(bits) < nbits:
-            bits += [False] * (nbits-len(bits))
+            bits += [False] * (nbits - len(bits))
         for pin, bit in zip(self._dpins, bits):
             tow[pin] = bit
 
