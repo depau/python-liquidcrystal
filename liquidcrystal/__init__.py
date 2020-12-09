@@ -369,10 +369,6 @@ class LiquidCrystal(object):
         ============================= ============================
         """
 
-        if self._rw is not None:
-            while self.is_busy:
-                self._sleep(EXEC_TIME * ms)
-
         if mode == FOUR_BITS:
             self.write_bits(value & 0x0F, 4, COMMAND)
         else:
