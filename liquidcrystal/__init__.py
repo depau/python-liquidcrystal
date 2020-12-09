@@ -127,6 +127,10 @@ class LiquidCrystal(object):
 
         self.backlight = 255
 
+        if self._rw is not None:
+            while self.is_busy:
+                self._sleep(EXEC_TIME * ms)
+
     @property
     def backlight(self):
         """
