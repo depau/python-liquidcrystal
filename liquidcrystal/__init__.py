@@ -125,8 +125,6 @@ class LiquidCrystal(object):
         self.clear()
         self.send(LCD_ENTRYMODESET | self._displaymode, COMMAND)
 
-        self.backlight = 255
-
         if self._rw is not None:
             while self.is_busy:
                 self._sleep(EXEC_TIME * ms)
