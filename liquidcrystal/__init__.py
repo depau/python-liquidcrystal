@@ -5,8 +5,10 @@ LiquidCrystal LCD library based on PyWiring.
 __all__ = ("LiquidCrystal",)
 
 import time
+import warnings
 
 from numpy import uint8
+from pywiring import IOBase
 
 from .values import *
 
@@ -47,7 +49,7 @@ class LiquidCrystal(object):
     def __init__(self, ioi, en=2, rw=1, rs=0, data=(4, 5, 6, 7), bl=3, cols=16, rows=2, charsize=LCD_5x8DOTS):
         if len(data) not in (4, 8):
             raise ValueError("data pins can only be 4 or 8")
-        self._ioi = ioi
+        self._ioi: IOBase = ioi
         self._en = en
         self._rw = rw
         self._rs = rs
@@ -100,6 +102,10 @@ class LiquidCrystal(object):
         # before sending commands. Arduino can turn on way before 4.5V so we'll wait 
         # 50
         self._sleep(100 * ms)
+
+        if self._rw is not None:
+            while self.is_busy:
+                self._sleep(EXEC_TIME * ms)
 
         # Put LCD into 4-bit mode
         self.send(0b11)
@@ -185,6 +191,19 @@ class LiquidCrystal(object):
             self._displaycontrol &= ~uint8(LCD_BLINKON)
         self.send(LCD_DISPLAYCONTROL | self._displaycontrol, COMMAND)
         self._blink = value
+
+    @property
+    def is_busy(self):
+        if self._rw is None:
+            warnings.warn("Can't check if display is busy when RW pin is not provided")
+            return False
+        self._ioi.pin_mode_bulk({i: True for i in self._dpins})  # Set all datq pins to input
+        self._ioi.digital_write_bulk({self._rs: False, self._rw: True})
+        busy = self._ioi.digital_read(self._dpins[3])
+        self._ioi.digital_write_bulk({self._rs: False, self._rw: False})
+        self._ioi.pin_mode_bulk({i: False for i in self._dpins})  # Set all datq pins to output
+
+        return busy
 
     def scroll_display_left(self):
         """
@@ -349,6 +368,11 @@ class LiquidCrystal(object):
         :pyy:const:`values.FOUR_BITS` Write 4 bits to the LCD
         ============================= ============================
         """
+
+        if self._rw is not None:
+            while self.is_busy:
+                self._sleep(EXEC_TIME * ms)
+
         if mode == FOUR_BITS:
             self.write_bits(value & 0x0F, 4, COMMAND)
         else:
@@ -364,8 +388,9 @@ class LiquidCrystal(object):
         if tow is None:
             tow = {}
 
-        tow[self._en] = True
         self._ioi.digital_write_bulk(tow)
+        self._sleep(us)
+        self._ioi.digital_write(self._en, True)
         self._sleep(us)
         self._ioi.digital_write(self._en, False)
 
