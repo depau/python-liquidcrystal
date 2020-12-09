@@ -197,11 +197,11 @@ class LiquidCrystal(object):
         if self._rw is None:
             warnings.warn("Can't check if display is busy when RW pin is not provided")
             return False
-        self._ioi.pin_mode_bulk({i: True for i in self._dpins})  # Set all datq pins to input
+        self._ioi.pin_mode_bulk({i: (True, False, False) for i in self._dpins})  # Set all datq pins to input
         self._ioi.digital_write_bulk({self._rs: False, self._rw: True})
         busy = self._ioi.digital_read(self._dpins[3])
         self._ioi.digital_write_bulk({self._rs: False, self._rw: False})
-        self._ioi.pin_mode_bulk({i: False for i in self._dpins})  # Set all datq pins to output
+        self._ioi.pin_mode_bulk({i: (False, False, False) for i in self._dpins})  # Set all datq pins to output
 
         return busy
 
